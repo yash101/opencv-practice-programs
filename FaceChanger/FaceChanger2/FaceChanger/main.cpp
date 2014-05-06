@@ -3,6 +3,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <pthread.h>
 #include <iostream>
+#include <functionstoolkit.h>
 using namespace cv;
 using namespace std;
 
@@ -17,11 +18,12 @@ Mat img;
 pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t m2 = PTHREAD_MUTEX_INITIALIZER;
 bool flipFace = false;
-string imageURI = "evil_smiley.jpg";
+string imageURI = "bird.png";
 int imageNumber = rand();
 int rotation = 0;
 bool rot = false;
 int rndNum = 0;
+FunctionsToolkit kit;
 
 void cvRotate(Mat& src, double angle, Mat& dst)
 {
@@ -44,7 +46,7 @@ void *imageGrabber(void *threadID)
     cout << "\nGrabber in thread ==>" << tid << endl;
     while(true)
     {
-        if(cam1)
+        /*if(cam1)
         {
             Mat x = cvQueryFrame(cam1);
             flip(x, x, 1);
@@ -54,6 +56,13 @@ void *imageGrabber(void *threadID)
                 x.copyTo(img);
                 pthread_mutex_unlock(&m1);
             }
+        }*/
+        Mat x = kit.freenect_sync_get_rgb_cv(0);
+        if(!x.empty())
+        {
+            pthread_mutex_lock(&m1);
+            x.copyTo(img);
+            pthread_mutex_unlock(&m1);
         }
     }
 }
@@ -141,7 +150,8 @@ int main()
                             cvtColor(smallCreeper, creeperFaceHSV, CV_BGR2HSV);
                             inRange(creeperFaceHSV, Scalar(0, 0, 254), Scalar(0, 0, 255), creeperFaceHSV);
                             imshow("Win2", creeperFaceHSV);
-                            smallCreeper.copyTo(destinationROI);
+                            threshold(creeperFaceHSV, creeperFaceHSV, 64, 255, CV_THRESH_BINARY_INV);
+                            smallCreeper.copyTo(destinationROI, creeperFaceHSV);
                         } else {
                             Rect faceROI(faces[i].x, faces[i].y, faces[i].width, faces[i].height);
                             Mat faceColor = x(faceROI);
