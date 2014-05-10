@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2014-05-05T12:29:53
+# Project created by QtCreator 2014-05-08T11:01:43
 #
 #-------------------------------------------------
 
@@ -8,18 +8,13 @@ QT       += core
 
 QT       -= gui
 
-TARGET = FaceChanger
+TARGET = DevScreen
 CONFIG   += console
 CONFIG   -= app_bundle
-
 TEMPLATE = app
-
 LIBS += `pkg-config --libs opencv libfreenect`
 LIBS += -lfreenect_sync
-
-
-SOURCES += main.cpp \
-    functionstoolkit.cpp
+SOURCES += main.cpp
 
 HEADERS += \
-    functionstoolkit.h
+    FunctionsToolkit.hpp

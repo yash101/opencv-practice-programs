@@ -46,7 +46,7 @@ void *imageGrabber(void *threadID)
     cout << "\nGrabber in thread ==>" << tid << endl;
     while(true)
     {
-        /*if(cam1)
+        if(cam1)
         {
             Mat x = cvQueryFrame(cam1);
             flip(x, x, 1);
@@ -56,14 +56,15 @@ void *imageGrabber(void *threadID)
                 x.copyTo(img);
                 pthread_mutex_unlock(&m1);
             }
-        }*/
+        }
+        /*
         Mat x = kit.freenect_sync_get_rgb_cv(0);
         if(!x.empty())
         {
             pthread_mutex_lock(&m1);
             x.copyTo(img);
             pthread_mutex_unlock(&m1);
-        }
+        }*/
     }
 }
 
