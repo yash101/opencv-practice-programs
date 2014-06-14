@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
             } else {
                 if(x == 'c')
                 {
-                    string uri = "/host/share/saves/imgae" + number + ".jpg";
+                    string uri = "/media/storage/programming/saves/image_" + number + ".jpg";
                     imwrite(uri, img);
                     cout << "\nImage saved!\n==>" << uri;
                 }

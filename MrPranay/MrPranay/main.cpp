@@ -1,3 +1,61 @@
+//====================[LICENSE STATEMENT]====================//
+//Dev's OpenCV Starter Template with Threading is free software:
+//you can redistribute and/or modify it under the terms of the GNU
+//General Public Licence as published by the Free Software Foundation,
+//either version 3 of the License, or (at your opinion) any later
+//version.
+
+//Dev's OpenCV Starter Template with Threading is distributed in the
+//hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+//the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//PURPOSE. See the GNU General Public Licence for more detarils.
+
+//You should have recieved a copy of the GNU General Public License
+//along with Dev's OpenCV Starter Template with Threading. If not, see
+//<http://www.gnu.org/licenses/>.
+
+//====================[PROGRAM]====================//
+//TEMPLATE BY:              DEVYASH LODHA
+//TEMPLATE NAME:            OPENCV THREADED GRABBER TEMPLATE
+//CLASS AUTHOR:             [YOU FILL THIS IN]
+//PROGRAMMING TEAM:         [YOU FILL THIS IN]
+//TEAM NUMBER [FRC]:        [YOU FILL THIS IN]
+//DATE MODIFIED:            [DATE]
+//PROJECT:                  [YOU FILL THIS IN]
+//PROJECT DESCRIPTION:      [YOU FILL THIS IN]
+//PLATFORM:                 Debian/Linux with OpenCV and libfreenect
+
+//PROJECT SETUP:
+//This is for setup within QT Creator!
+//Create a new project. It must be a QT Creator QT Console Application!
+//Once you have created the project, you will have main.cpp and the
+//project file! Open the project file in the text editor! At the end,
+//you need to specify where the libraries are! This is where pkg-config
+//comes extremely useful. You must append the following:
+//LIBS += `pkg-config --libs opencv libfreenect`
+//LIBS += -lfreenect_sync
+//Now, save the file! All the libraries have been successfully imported!
+//Now, close QT Creator and open the project working directory!
+//Delete main.cpp! Now, copy and paste this template in the folder
+//and you will have a new main.cpp! This is where you will do your
+//coding! This project uses a set of functions I have written, called
+//FunctionsToolkit.h. Download functionstoolkit.h and place it in the
+//project working directory! Now, reopen the project in QT Creator!
+//Right click the project, highest in the tree, in the project explorer.
+//Click the "Add Existing Files" button! Now, select functionstoolkit.h
+//QT Creator will then automatically generate the makefiles and get
+//everything set up! You may wonder what FunctionsToolkit is! It is
+//a set of functions that are so often used, it is redundant to rewrite
+//them in every program! Please, feel free to add those redundant
+//functions into this file, and make it your own! You will be able to
+//access those functions from other projects! But now, how do I access
+//those functions? It is simple! Just access it like a regular
+//function, but place "kit." before it. This is using a feature of
+//Object Oriented Programming (OOP), known as composition. Now, you
+//are set to code! Now, write some crazy-powerful applications that
+//will change the world -- make the world a better place than it
+//already is! :)
+
 //Welcome! This is the OpenCV programming started template, written
 //by Devyash Lodha! This template is meant to give newbie programmers
 //quite a bit of a head start when learning OpenCV. The truth is that
@@ -14,6 +72,15 @@
 //your code! The bootloader turns on the camera, and then launches the
 //thread, which connects to the camera. The bootloader then launches
 //your code!
+
+//The main point of this template is to make it easier to get started
+//with your opencv programs. This template makes it easy to get the
+//camera capture up and running quickly. It is annoying to create the
+//CvCapture object and do all that work for each program, no matter how
+//simple it is. It is even a greater hastle to get the threading up and
+//running with not a single problem. This template does all this dirty
+//work done for you, allowing you to better spend your time honing your
+//algorithm and learning better concepts
 
 //How to get started:
 //There is a "run" function in this template. It must return an integer!
@@ -57,10 +124,11 @@
 #include <ctime>
 #include <sys/stat.h>
 
+#include <functionstoolkit.h>
+
 //add your other includes here:
 //for example, to get some advanced trig and math functions,
 //#include <cmath>
-#include <opencv2/photo/photo.hpp>
 //Now, it's time to get coding!
 
 //here are the namespaces! We need these, to scope into the libraries
@@ -82,6 +150,11 @@ using namespace cv;
 //and it is outdated. It is also harder to use than CvCapture!
 CvCapture *cam1;
 
+//There are a few functions not worth writing on your own. I have witten
+//them for you in the functionstoolkit.hpp header! Don't forget to add to
+//that header!
+FunctionsToolkit kit;
+
 //this stores the image that we will be passing along multiple threads!
 Mat img;
 
@@ -89,12 +162,20 @@ Mat img;
 //and files! This is where you should store all your configuration files
 //and save debug! Debug can be in the form of images, videos, or maybe
 //even a text/plain console output log!
-const string path = "~/Desktop/CV-SKELETON/PROGRAMS/";
+const string path = "/home/yash/Desktop/CV-SKELETON/PROGRAMS/";
 //This is the name of the project! This will be used in the generation
 //of the directory structure, and is meant to keep all the files from
 //each project saparate from each other!
-const string project_name = "FaceChanger";
+const string project_name = "DevVision2014_REV1_0";
 const string project_path = path + project_name;
+
+//There are designated places to store files:
+//Store saves, images, other output items, wanted by the user in the saves
+//folder. Store the configuration files in the config directory. Store the
+//debug files, logs, images and videos in the debug folder!
+const string debug_path = project_path + "/debug";
+const string saves_path = project_path + "/saves";
+const string config_path = project_path + "/config";
 
 //this is a mutex. It's job is to lock the resources. If a person is
 //working on something, they are locked. In that case, we would call
@@ -123,7 +204,14 @@ long num = 0;
 //      |  1  |  MJPEG           |   Stream URL  |
 //      |  2  |  AVI File        |   Stream URL  |
 //      |  3  |  Image [JPG|PNG] |   Stream URL  |
+//      |  4  |  Kinect [RBG]    |   Device ID   |
+//      |  5  |  Kinect [IR]     |   Device ID   |
+//      |  6  |  Kinect [Dep G.] |   Device ID   |
 //      +-----+------------------+---------------+
+//You must have libfreenect installed for this skeleton to compile.
+//Without it, you must strip the libfreenect code to run with the
+//kinect. We use libfreenect-sync for OpenCV <=> LibFreenect interaction
+//This is the I.D. Above!
 static int capType = 0;
 //the Device ID. Typically, this is zero, however, if the system has
 //multiple cameras, you may need to play around and find the proper
@@ -148,7 +236,40 @@ static string stream = "http://10.11.65.13/mjpg/video.mjpg";
 //is the camera data! Feel free to use up this Matrix. For example, if you
 //wanted to change it's color space, you may attempt using:
 //cvtColor(input, input, CV_BGR2GRAY|HSV|ETC.);! Also, feel free to make
-//your own Matrices, etc. e.g. Mat gray!
+//your own Matrices, etc. e.g. Mat gray! You will probably want to output
+//some information to the screen! To put info on the screen, just draw on
+//a the Matrix, output, and the program will display it!
+
+//Define your own variables here. You need to use variables to store values,
+//for example, integers, doubles, longs, floats, bools and all sorts of
+//variable types. Also, define all objects you use here!
+//for example, you could have a color, and OpenCV object:
+//Scalar(0, 128, 255);
+//or you could have an integer:
+//int x = 0;
+//or anything else you could think of! :)
+
+int hmin = 0;
+int hmax = 255;
+int smin = 0;
+int smax = 255;
+int vmin = 0;
+int vmax = 255;
+int kernel = 1;
+int epsilon = 4;
+int minarea = 0;
+int maxarea = 10000;
+Size camSize(640, 480);
+
+//Don't forget, you can define your own functions. However, remember that
+//this is C++. That means that the functions you will use in your run
+//function must be written BEFORE the run function!
+//For example, you may have a function:
+//void hello()
+//{
+//  cout << "Hello, World!" << endl;
+//  return;
+//}
 
 //this is the function you will play with :)
 int run()
@@ -156,8 +277,14 @@ int run()
     //this is the loop that runs forever, and holds our main processing loop!
     while(true)
     {
+        //We need to show some output, right?! This is where we create the main
+        //Window! The Window Name is the project_name, which you set above!
+        //You can add widgets to the canvas of the Window, or use imshow to
+        //display a matrix on the screen. You can also do both at the same time
+        namedWindow(project_name, CV_WINDOW_FREERATIO);
+
         //this is the matrix that we will store the picture within
-        Mat input;
+        Mat input, output;
         //first, we need to lock the resource, to prevent corrupt heaps, stacks
         //and other memory locations. Those errors are very ugly and hard to
         //debug!
@@ -181,49 +308,26 @@ int run()
             //===============================================================//
 
 
-            //create the window in which we will display the image!
-            namedWindow("Image", CV_WINDOW_OPENGL);
-            cv::setOpenGlContext("Image");
 
-            cvtColor(input, input, CV_BGR2Lab);
-            cvtColor(input, input, CV_Lab2BGR);
-            //the size of the camera input
-            Size regSize(640, 480);
 
-            //create all the matrices we will use throughout our processing
-            //loop! Gray = grayscale. edges is a picture with all the edges.
-            //mask is the mask we will apply. small is a rescaled image, of
-            //half the dimensions. big is the image of the same size of the camera
-            Mat gray, edges, mask, small, big;
 
-            //let's convert the input image to grayscale and save it into gray
-            cvtColor(input, gray, CV_BGR2GRAY);
-            //let's do a medianBlur to calculate the noise and get rid of it!
-            medianBlur(gray, gray, 7);
-            //this is an edge detector. It uses the variant between multiple
-            //pixels and draws a dot if it great enough!
-            Laplacian(gray, edges, CV_8U, 5);
-            //this converts the edges into a binary image, and inverts it, to
-            //have a white background!
-            threshold(edges, mask, 80, 255, CV_THRESH_BINARY_INV);
 
-            //this is half the size of the camera!
-            Size half(regSize.width / 2, regSize.height / 2);
-            //we resize the original image to the size we defined before!
-            resize(input, small, half, 0, 0, INTER_LINEAR);
 
-            //we blow it up back to the camera size!
-            resize(small, big, regSize, 0, 0, INTER_LINEAR);
-            //this is the destination matrix, the picture we display on the screen!
-            Mat dst;
-            //We clear the destination image
-            dst.setTo(0);
-            //We copy the input image into the output image, but only where
-            //the mask is white!
-            big.copyTo(dst, mask);
 
-            //let's show the image on the screen now! Hooray!!! We are done!
-            imshow("Image", dst);
+
+
+
+            input.copyTo(output);
+
+
+
+
+
+
+
+
+
+
 
 
             //===============================================================//
@@ -231,6 +335,12 @@ int run()
             //this one or it won't be visible to the compiler! Have a good
             //day and I hope you enjoy programming with this code template!
 
+            //We need to check to see if you use the output matrix. If you use it,
+            //we need to show it on the screen!
+            if(!output.empty())
+            {
+                imshow(project_name, output);
+            }
             //over here, we will check keystrokes on the main windows! Key
             //code 27 is the ASCII value for the [ESC] key. When that is
             //called, we perform exit(EXIT_SUCCESS); to halt the program send
@@ -241,16 +351,27 @@ int run()
             key = waitKey(1);
             if(key != -1)
             {
-                cout << "Key code: " << key << " pressed!" << endl;
+                cout << "Program>> Key code: " << key << " pressed!" << endl;
             }
-            //ESC key
+            //ESC key, all it's combinations
             if(key == 27 || key == 131099)
             {
                 exit(EXIT_SUCCESS);
             } else {
                 //F1 key (Without SHIFT)
                 if(key == 65470) {
-
+                    string filename = saves_path + "/image_save_processed_" + kit.toStr(num) + ".jpg";
+                    imwrite(filename, output);
+                    cout << "Program>> OUTPUT SAVED! " + filename << endl;
+                    num++;
+                } else {
+                    if(key == 131006)
+                    {
+                        string filename = saves_path + "/image_saved_unprocessed_" + kit.toStr(num) + ".jpg";
+                        imwrite(filename, input);
+                        cout << "Program>> INPUT SAVED! " + filename << endl;
+                        num++;
+                    }
                 }
             }
         }
@@ -267,7 +388,7 @@ void *grabber(void* threadAddr)
     //We want to have the thread ID, for debug. This is optional, but is nice
     //to have!
     long tid = (long) threadAddr;
-    //debug the capture v ariables defined
+    //debug the capture variables defined
     cout << "Grabber>> Grabber initialised!" << endl;
     cout << "Grabber>> Thread " << tid << endl;
     cout << "Grabber>> CAPTYPE\t" << capType << endl;
@@ -351,10 +472,73 @@ void *grabber(void* threadAddr)
                 exit(EXIT_FAILURE);
             }
         } else {
-            //If the capType was wrong, e.g. 6, you get this error and the program quits!
-            //This is a programmer errorn and must be fixed immediately
-            cout << "[ERROR][FATAL] Grabber>> Invalid CAPTYPE ID. Please change those variables!" << endl;
-            exit(EXIT_FAILURE);
+            if(capType == 4)
+            {
+                //Download the kinect RGB image
+                Mat x = kit.freenect_sync_get_rgb_cv(0);
+                if(!x.empty())
+                {
+                    //We process BGR, not RGB, so we need to flip channels R and B. While
+                    //we could use cv::split to do so, we instead use cvtColor(). There
+                    //is a mode that converts RGB to BGR.
+                    cvtColor(x, x, CV_RGB2BGR);
+                    //lock the resources
+                    pthread_mutex_lock(&m1);
+                    //upload the image to the global image
+                    x.copyTo(img);
+                    //unlock the resources and allow program execution
+                    pthread_mutex_unlock(&m1);
+                } else {
+                    cout << "[ERROR][FATAL] Grabber>> Something went wrong! I downloaded an empty image! I must exit!" << endl;
+                    exit(EXIT_FAILURE);
+                }
+            } else {
+                if(capType == 5)
+                {
+                    //Download the IR image from the Infrared camera.
+                    Mat x = kit.freenect_sync_get_ir_cv(0);
+                    //Check to make sure the image isn't invalid
+                    if(!x.empty())
+                    {
+                        //lock the resources
+                        pthread_mutex_lock(&m1);
+                        //upload the image into the global matrix
+                        x.copyTo(img);
+                        //unlock the resources
+                        pthread_mutex_unlock(&m1);
+                    } else {
+                        cout << "[ERROR][FATAL] Grabber>> Something went wrong! I downloaded an empty image! I must exit!" << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                } else {
+                    if(capType == 6)
+                    {
+                        //Download the image from the Kinect sensor. We will get the depth
+                        //map! This is a graph that was made by the PrimeSense chip on the
+                        //Kinect! It's a nice way to get quick and dirty distance measurements
+                        //using the Kinect's algorighms!
+                        Mat x = kit.freenect_sync_get_depth_cv(0);
+                        //Check to make sure the image is not corrupt of empty
+                        if(!x.empty())
+                        {
+                            //Lock all the resources
+                            pthread_mutex_lock(&m1);
+                            //Make the image available to all the threads
+                            x.copyTo(img);
+                            //unlock the resources so we can allow program execution!
+                            pthread_mutex_unlock(&m1);
+                        } else {
+                            cout << "[ERROR][FATAL] Grabber>> Something went wrong! I downloaded an empty image! I must exit!" << endl;
+                            exit(EXIT_FAILURE);
+                        }
+                    } else {
+                        //If the capType was wrong, e.g. 6, you get this error and the program quits!
+                        //This is a programmer errorn and must be fixed immediately
+                        cout << "[ERROR][FATAL] Grabber>> Invalid CAPTYPE ID. Please change those variables!" << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
         }
     }
 }
@@ -435,19 +619,27 @@ int main()
     cout << "Bootloader>> Checking saves directory and creating it if nonexistent!" << endl;
     cout << "Bootloader>> Checking directories and making missing ones!" << endl;
 
-    //Create the project configuration folder
+    //Create the project configuration folder. This is where the skeleton allocates
+    //to store the program data. This allows the program to be
+    //configurable through means other than code. This is for the
+    //configuration files! These allow the program to load the setup
+    //info at boot time and self-configure!
     if(makedir(project_path + "/config"))
     {
         cout << "Bootloader>> checked directory: " << project_path << "/config" << endl;
     }
 
-    //Create project save folder
+    //Create project save folder. Many times, you will be writing
+    //an application that has a great user interface. In this case,
+    //you will be likely to write images that the user wants to
+    //save! This skeleton helps get that done for you!
     if(makedir(project_path + "/saves"))
     {
         cout << "Bootloader>> checked directory: " << project_path << "/config" << endl;
     }
 
-    //Create the project debug folder
+    //Create the project debug folder. This is where we will store
+    //the debug files, logs, images, binaries, dumps, etc.
     if(makedir(project_path + "/debug"))
     {
         cout << "Bootloader>> checked directory: " << project_path << "/debug" << endl;
@@ -485,6 +677,29 @@ int main()
                 if(capType == 3)
                 {
                     cout << "Bootloader>> Choosing image!" << endl;
+                    cout << "Bootloader>> Nulling capture!" << endl;
+                    cam1 = NULL;
+                } else {
+                    if(capType == 4)
+                    {
+                        cout << "Bootloader>> Capturing from the Kinect, RGB STREAM!" << endl;
+                        cout << "Bootloader>> Nulling capture!" << endl;
+                        cam1 = NULL;
+                    } else {
+                        if(capType == 5)
+                        {
+                            cout << "Bootloader>> Capturing from the Kinect, IR STREAM!" << endl;
+                            cout << "Bootloader>> Nulling capture!" << endl;
+                            cam1 = NULL;
+                        } else {
+                            if(capType == 6)
+                            {
+                                cout << "Bootloader>> Capturing from the Kinect, DEPTH STREAM!" << endl;
+                                cout << "Bootloader>> Nulling capture!" << endl;
+                                cam1 = NULL;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -497,3 +712,13 @@ int main()
     //run the main loop. This is the function that holds your code
     return run();
 }
+
+
+//I hope you enjoyed using this OpenCV template! If you have any questions,
+//email me at devstuffbydev@gmail.com
+//my website is http://devstuff.no-ip.info!
+//The OpenCV documentation is at docs.opencv.org.
+//The OpenCV documentation is also available as a [LONG] PDF at
+//  http://docs.opencv.org/opencv2refman.pdf
+//The OpenCV Q and A is at answers.opencv.org
+//WillowGarage's homepage is http://willowgarage.com

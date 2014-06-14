@@ -18,7 +18,7 @@ Mat img;
 pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t m2 = PTHREAD_MUTEX_INITIALIZER;
 bool flipFace = false;
-string imageURI = "bird.png";
+string imageURI = "abu.jpg";
 int imageNumber = rand();
 int rotation = 0;
 bool rot = false;
@@ -27,10 +27,7 @@ FunctionsToolkit kit;
 
 void cvRotate(Mat& src, double angle, Mat& dst)
 {
-    int len = max(src.cols, src.rows);
-    Point2f pt(len/2., len/2.);
-    Mat r = getRotationMatrix2D(pt, angle, 1.0);
-    warpAffine(src, dst, r, Size(len, len));
+    warpAffine(src, dst, getRotationMatrix2D(Point2f(max(src.cols / 2, src.rows / 2), max(src.cols / 2, src.rows / 2)), angle, 1.0), Size(max(src.cols, src.rows), max(src.cols, src.rows)));
 }
 
 string toStr(int number)
@@ -57,14 +54,6 @@ void *imageGrabber(void *threadID)
                 pthread_mutex_unlock(&m1);
             }
         }
-        /*
-        Mat x = kit.freenect_sync_get_rgb_cv(0);
-        if(!x.empty())
-        {
-            pthread_mutex_lock(&m1);
-            x.copyTo(img);
-            pthread_mutex_unlock(&m1);
-        }*/
     }
 }
 
@@ -112,11 +101,19 @@ int main()
         Mat faceColor4 = unchanged(faceROI4);
         faceColor4.copyTo(creeperFace);
     }
+    if(faces2.size() > 0)
+    {
+        cout << "Face Found!" << endl;
+    }
+    else
+    {
+        cout << "Face not found!" << endl;
+    }
 
     pthread_t threads[0];
     pthread_create(&threads[0], NULL, imageGrabber, (void *)0);
     cout << "Welcome!\n\tPress [ESC] to exit!\n\tPress [S] to switch modes!\n\tPress [C] to capture the image!\n\tPress [T] to toggle rotation :D!" << endl;
-    while(1)
+    while(true)
     {
         Mat x, y;
         pthread_mutex_lock(&m1);
@@ -148,15 +145,16 @@ int main()
                             Rect roi(Point(faces[i].x, faces[i].y), Size(faces[i].width, faces[i].height));
                             Mat destinationROI = x(roi);
                             Mat creeperFaceHSV;
-                            cvtColor(smallCreeper, creeperFaceHSV, CV_BGR2HSV);
-                            inRange(creeperFaceHSV, Scalar(0, 0, 254), Scalar(0, 0, 255), creeperFaceHSV);
-                            imshow("Win2", creeperFaceHSV);
+                            //cvtColor(smallCreeper, creeperFaceHSV, CV_BGR2HSV);
+                            smallCreeper.copyTo(creeperFaceHSV);
+                            inRange(creeperFaceHSV, Scalar(254, 254, 254), Scalar(255, 255, 255), creeperFaceHSV);
+                            //inRange(creeperFaceHSV, Scalar(0, 0, 254), Scalar(0, 0, 255), creeperFaceHSV);
                             threshold(creeperFaceHSV, creeperFaceHSV, 64, 255, CV_THRESH_BINARY_INV);
                             smallCreeper.copyTo(destinationROI, creeperFaceHSV);
                         } else {
                             Rect faceROI(faces[i].x, faces[i].y, faces[i].width, faces[i].height);
                             Mat faceColor = x(faceROI);
-                            cvtColor(faceColor, faceColor, CV_BGR2RGB);
+                            //cvtColor(faceColor, faceColor, CV_BGR2RGB);
                             flip(faceColor, faceColor, 0);
                             if(rot)
                             {
@@ -176,6 +174,12 @@ int main()
                 }
             }
             namedWindow("Window", CV_WINDOW_KEEPRATIO);
+            putText(x, "Press [ S ] to switch modes!", Point(0, 20), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            putText(x, "Press [ESC] to exit!", Point(0, 40), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            if(flipFace)
+            {
+                putText(x, "Press [ T ] to toggle rotation!", Point(0, 60), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            }
             imshow("Window", x);
             int keyStroke = waitKey(1);
             if(keyStroke == 27)
