@@ -23,11 +23,16 @@ int imageNumber = rand();
 int rotation = 0;
 bool rot = false;
 int rndNum = 0;
+int frameNum = 0;
+int skipFrames = 0;
+int captured = 0;
+bool record = false;
 FunctionsToolkit kit;
 
 void cvRotate(Mat& src, double angle, Mat& dst)
 {
     warpAffine(src, dst, getRotationMatrix2D(Point2f(max(src.cols / 2, src.rows / 2), max(src.cols / 2, src.rows / 2)), angle, 1.0), Size(max(src.cols, src.rows), max(src.cols, src.rows)));
+    return;
 }
 
 string toStr(int number)
@@ -37,7 +42,7 @@ string toStr(int number)
     return str.str();
 }
 
-void *imageGrabber(void *threadID)
+void * imageGrabber(void *threadID)
 {
     long tid = (long) threadID;
     cout << "\nGrabber in thread ==>" << tid << endl;
@@ -113,6 +118,8 @@ int main()
     pthread_t threads[0];
     pthread_create(&threads[0], NULL, imageGrabber, (void *)0);
     cout << "Welcome!\n\tPress [ESC] to exit!\n\tPress [S] to switch modes!\n\tPress [C] to capture the image!\n\tPress [T] to toggle rotation :D!" << endl;
+    string text = "ACTION: NONE";
+    string key_s = " ";
     while(true)
     {
         Mat x, y;
@@ -124,7 +131,7 @@ int main()
             }
         }
         pthread_mutex_unlock(&m1);
-        Mat gray, hist;
+        Mat gray, hist, clean;
         if(!x.empty())
         {
             x.copyTo(y);
@@ -147,7 +154,7 @@ int main()
                             Mat creeperFaceHSV;
                             //cvtColor(smallCreeper, creeperFaceHSV, CV_BGR2HSV);
                             smallCreeper.copyTo(creeperFaceHSV);
-                            inRange(creeperFaceHSV, Scalar(254, 254, 254), Scalar(255, 255, 255), creeperFaceHSV);
+                            inRange(creeperFaceHSV, Scalar(250, 250, 250), Scalar(255, 255, 255), creeperFaceHSV);
                             //inRange(creeperFaceHSV, Scalar(0, 0, 254), Scalar(0, 0, 255), creeperFaceHSV);
                             threshold(creeperFaceHSV, creeperFaceHSV, 64, 255, CV_THRESH_BINARY_INV);
                             smallCreeper.copyTo(destinationROI, creeperFaceHSV);
@@ -173,37 +180,135 @@ int main()
                     }
                 }
             }
+            x.copyTo(clean);
+
             namedWindow("Window", CV_WINDOW_KEEPRATIO);
-            putText(x, "Press [ S ] to switch modes!", Point(0, 20), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
-            putText(x, "Press [ESC] to exit!", Point(0, 40), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+
+            if(record)
+            {
+                if(frameNum >= skipFrames)
+                {
+                    cout << "(PROC) The image was saved at \"/media/storage/programming/saves/facechanger-timedsaver2/" << imageNumber << "_PROC.jpg" << endl;
+                    imwrite("/media/storage/programming/saves/facechanger-timedsaver2/" + toStr(imageNumber) + "_PROC.jpg", clean);
+                    imageNumber++;
+                    cout << "(UNPROC) The image was saved at \"/media/storage/programming/saves/facechanger-timedsaver2/" << imageNumber << "_UNPROC.jpg" << endl;
+                    imwrite("/media/storage/programming/saves/facechanger-timedsaver2/" + toStr(imageNumber) + "_UNPROC.jpg", y);
+                    imageNumber++;
+                    frameNum = 0;
+                    rectangle(x, Point(0, 0), Point(x.cols, x.rows), Scalar(255, 255, 255), 128, 8, 0);
+                    captured += 2;
+                    circle(x, Point(x.cols -32, x.rows - 32), 8, Scalar(0, 0, 255), 16, 8, 0);
+                }
+                else if(frameNum == skipFrames - 1)
+                {
+                    rectangle(x, Point(0, 0), Point(x.cols, x.rows), Scalar(16, 255, 16), 16, 8, 0);
+                    circle(x, Point(x.cols -32, x.rows - 32), 8, Scalar(255, 0, 0), 16, 8, 0);
+                }
+                else
+                {
+                    rectangle(x, Point(0, 0), Point(x.cols, x.rows), Scalar(16, 16, 255), 16, 8, 0);
+                    circle(x, Point(x.cols -32, x.rows - 32), 8, Scalar(0, 255, 0), 16, 8, 0);
+                }
+                frameNum++;
+            }
+
+            string tmp = record ? "True!" : "False";
+
+            putText(x, "Press [ S ] to switch modes!", Point(16, 20), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            putText(x, "Press [ESC] to exit!", Point(16, 40), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            putText(x, "Press [ C ] to capture an image!", Point(16, 60), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            putText(x, "Press [ F1 ] to clear the saves folder!", Point(16, 80), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            putText(x, "Press [ R ] to toggle recording!", Point(16, 100), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            putText(x, "FrameDelay: " + toStr(skipFrames), Point(16, 120), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
+            putText(x, "FrameCount: " + toStr(frameNum), Point(16, 140), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
+            putText(x, "Captured: " + toStr(captured), Point(16, 160), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
+            putText(x, "Record: " + tmp, Point(16, 180), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
+            putText(x, "Key: " + key_s, Point(x.cols - 192, x.rows - 32), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
+            putText(x, "Action: " + text, Point(16, x.rows - 32), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
+
+            text = "";
             if(flipFace)
             {
-                putText(x, "Press [ T ] to toggle rotation!", Point(0, 60), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+                putText(x, "Press [ T ] to toggle rotation!", Point(16, 200), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
             }
             imshow("Window", x);
-            int keyStroke = waitKey(1);
+            char key = waitKey(1);
+            key_s = toStr(key);
+            int keyStroke = (int) key;
+
+            if(keyStroke != -1)
+            {
+                cout << "Key Event: ASCII_" << (int) keyStroke << " | ASCII_" << key << endl;
+            }
+
             if(keyStroke == 27)
             {
+                text = "EXIT";
                 exit(EXIT_SUCCESS);
-            } else {
+            }
+            else
+            {
                 if(keyStroke == 's')
                 {
+                    text = "Mode Changed!";
                     flipFace = !flipFace;
-                } else {
+                }
+                else
+                {
                     if(keyStroke == 'c')
                     {
                         cout << "The image was saved at \"/host/share/saves/image" << imageNumber << ".jpg" << endl;
-                        imwrite("/media/storage/programming/saves/image" + toStr(imageNumber) + ".jpg", x);
+                        imwrite("/media/storage/programming/saves/image" + toStr(imageNumber) + ".jpg", clean);
+                        text = "Image Saved! FSAVED";
                         imageNumber++;
-                    } else {
+                    }
+                    else
+                    {
                         if(keyStroke == 't')
                         {
                             rot = !rot;
+                            text = "Rotation Toggled!";
+                        }
+                        else
+                        {
+                            if(keyStroke == '-')
+                            {
+                                if(skipFrames > 1)
+                                {
+                                    skipFrames--;
+                                    text = "Record Frequency Increased!";
+                                }
+                            }
+                            else
+                            {
+                                if(keyStroke == '=')
+                                {
+                                    skipFrames++;
+                                    text = "Record Frequency Deceased!";
+                                }
+                                else
+                                {
+                                    if(keyStroke == 621)
+                                    {
+                                        system("rm /media/storage/programming/saves/facechanger-timedsaver/*.jpg");
+                                        cout << "Erased all images!" << endl;
+                                        text = "Erased all images!";
+                                    }
+                                    else
+                                    {
+                                        if(keyStroke == 'r')
+                                        {
+                                            record = !record;
+                                            text = "Recorder Toggled!";
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
+        }        
     }
     return 0;
 }
