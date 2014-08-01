@@ -188,11 +188,11 @@ int main()
             {
                 if(frameNum >= skipFrames)
                 {
-                    cout << "(PROC) The image was saved at \"/media/storage/programming/saves/facechanger-timedsaver2/" << imageNumber << "_PROC.jpg" << endl;
-                    imwrite("/media/storage/programming/saves/facechanger-timedsaver2/" + toStr(imageNumber) + "_PROC.jpg", clean);
+                    cout << "(PROC) The image was saved at \"/media/storage/programming/saves/facechanger-timedsaver/BDAY2" << imageNumber << "_PROC.jpg" << endl;
+                    imwrite("/media/storage/programming/saves/facechanger-timedsaver/BDAY2/" + toStr(imageNumber) + "_PROC.jpg", clean);
                     imageNumber++;
-                    cout << "(UNPROC) The image was saved at \"/media/storage/programming/saves/facechanger-timedsaver2/" << imageNumber << "_UNPROC.jpg" << endl;
-                    imwrite("/media/storage/programming/saves/facechanger-timedsaver2/" + toStr(imageNumber) + "_UNPROC.jpg", y);
+                    cout << "(UNPROC) The image was saved at \"/media/storage/programming/saves/facechanger-timedsaver/BDAY2/" << imageNumber << "_UNPROC.jpg" << endl;
+                    imwrite("/media/storage/programming/saves/facechanger-timedsaver/BDAY2" + toStr(imageNumber) + "_UNPROC.jpg", y);
                     imageNumber++;
                     frameNum = 0;
                     rectangle(x, Point(0, 0), Point(x.cols, x.rows), Scalar(255, 255, 255), 128, 8, 0);
@@ -217,7 +217,7 @@ int main()
             putText(x, "Press [ S ] to switch modes!", Point(16, 20), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
             putText(x, "Press [ESC] to exit!", Point(16, 40), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
             putText(x, "Press [ C ] to capture an image!", Point(16, 60), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
-            putText(x, "Press [ F1 ] to clear the saves folder!", Point(16, 80), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
+            putText(x, "Press [ D ] to clear the saves folder!", Point(16, 80), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
             putText(x, "Press [ R ] to toggle recording!", Point(16, 100), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
             putText(x, "FrameDelay: " + toStr(skipFrames), Point(16, 120), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
             putText(x, "FrameCount: " + toStr(frameNum), Point(16, 140), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(16, 16, 255), 1, 8, false);
@@ -288,9 +288,9 @@ int main()
                                 }
                                 else
                                 {
-                                    if(keyStroke == 621)
+                                    if(keyStroke == 'd')
                                     {
-                                        system("rm /media/storage/programming/saves/facechanger-timedsaver/*.jpg");
+                                        system("rm /media/storage/programming/saves/facechanger-timedsaver/BDAY2*.jpg");
                                         cout << "Erased all images!" << endl;
                                         text = "Erased all images!";
                                     }
