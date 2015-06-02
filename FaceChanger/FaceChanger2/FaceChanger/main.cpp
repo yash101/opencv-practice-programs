@@ -7,8 +7,8 @@
 using namespace cv;
 using namespace std;
 
-//string faceCascade = "haarcascade_frontalface_alt.xml";
-string faceCascade = "lbpcascade_frontalface.xml";
+string faceCascade = "haarcascade_frontalface_alt.xml";
+//string faceCascade = "lbpcascade_frontalface.xml";
 CascadeClassifier face;
 //The Camera object. CvCapture is the new caputure object. cvCaptureFromCAM(int dev) startes the camera and sets it as input
 CvCapture *cam1 = cvCaptureFromCAM(0);
@@ -18,7 +18,7 @@ Mat img;
 pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t m2 = PTHREAD_MUTEX_INITIALIZER;
 bool flipFace = false;
-string imageURI = "patts.jpg";
+string imageURI = "penguin-face.png";
 int imageNumber = rand();
 int rotation = 0;
 bool rot = false;
@@ -181,7 +181,12 @@ int main()
                 putText(x, "Press [ T ] to toggle rotation!", Point(0, 60), CV_FONT_HERSHEY_COMPLEX_SMALL, 1.0, Scalar(255, 16, 16), 1, 8, false);
             }
             imshow("Window", x);
-            int keyStroke = waitKey(1);
+            char keyStroke = (char) waitKey(1);
+	    if(keyStroke != -1)
+	    {
+		std::cout << "Key: " << keyStroke << std::endl;
+	    }
+
             if(keyStroke == 27)
             {
                 exit(EXIT_SUCCESS);
